@@ -27,11 +27,11 @@
 ## Intallation
 1.Clone the project
    ```sh
-   git clone https://github.com/liuchuwei/caNano.git
+   git clone https://github.com/liuchuwei/trv.git
    ```
 2.Install conda environment
    ```sh
-   conda env create -f caNano.yaml
+   conda env create -f trv.yaml
    ```
 3.prepare tookit: 
 
