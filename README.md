@@ -1,7 +1,7 @@
 # trv
 
 ## Dependence
-[![](https://img.shields.io/badge/STAR-2.7-green)](https://github.com/samtools/samtools) 
+[![](https://img.shields.io/badge/STAR-2.7-green)](https://github.com/alexdobin/STAR) 
 [![](https://img.shields.io/badge/samtools-v1.1.7-green)](https://github.com/samtools/samtools)  
 
 ## Genome
