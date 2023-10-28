@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     for item in fls:
         fl = fldir + "/" + item
-        cmd = "rm %s" % (fl)
+        cmd = "rm -rf %s" % (fl)
         os.system(cmd)
 
     '6.Sort bam files'
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     bamfls = fldir + "/" + FLAGS.prefix + "Aligned.sortedByCoord.out.bam"
     sortfls = fldir + "/" + FLAGS.prefix + "sort.bam"
     cmd = '%s sort -l 7 -m 1M -t NOTAG -O BAM -@ 1 -o %s %s' % (tools.samtools, sortfls, bamfls)
-    # os.system(cmd)
+    os.system(cmd)
 
     '7.Splicing calculate'
     # read gtf files
