@@ -31,6 +31,19 @@ def BuildingIndex(tools, FLAGS):
 
     os.system(cmd)
 
+def AlignBasic(tools, FLAGS):
+
+    cmd = "%s " \
+          "--genomeDir %s " \
+          "--runThreadN 16 " \
+          "--readFilesIn %s " \
+          "--outFileNamePrefix %s " \
+          "--outSAMtype BAM SortedByCoordinate " \
+          "--outBAMsortingThreadN 10" % (tools.STAR, FLAGS.reference, " ".join(FLAGS.fastq), FLAGS.prefix)
+
+    os.system(cmd)
+
+
 def Align1st(tools, FLAGS):
 
     cmd = "%s \
@@ -115,6 +128,7 @@ if __name__ == "__main__":
     parser.add_argument('-reference', '--reference', required=True, help="Directory of reference")
     parser.add_argument('-prefix', '--prefix', required=True, help="prefix of out files")
     parser.add_argument('-out', '--out', required=True, help="Output directory")
+    parser.add_argument('-2pass', '--TwoPass', required=False, help="If used 2pass Mod")
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -127,49 +141,63 @@ if __name__ == "__main__":
     if not os.path.exists(FLAGS.reference + "/" + "SAindex"):
         BuildingIndex(tools, FLAGS)
 
-    '2.Alignment 1st'
-    fldir = FLAGS.out + "/" + FLAGS.prefix
-    if not os.path.exists(fldir):
-        os.mkdir(fldir)
+    '2.Alignment'
+    if FLAGS.TwoPass:
+        '2.1 Alignment 1st'
+        fldir = FLAGS.out + "/" + FLAGS.prefix
+        if not os.path.exists(fldir):
+            os.mkdir(fldir)
 
-    Align1st(tools, FLAGS)
+        Align1st(tools, FLAGS)
 
-    Align1out = [item for item in os.listdir("./") if item.startswith(FLAGS.prefix)]
+        Align1out = [item for item in os.listdir("./") if item.startswith(FLAGS.prefix)]
 
-    for item in Align1out:
-        cmd = "mv %s %s" % (item, fldir)
-        os.system(cmd)
+        for item in Align1out:
+            cmd = "mv %s %s" % (item, fldir)
+            os.system(cmd)
 
-    '3.Intermediate Index Generation'
-    InterIndex(tools, FLAGS)
+        '2.2 Intermediate Index Generation'
+        InterIndex(tools, FLAGS)
 
-    '4.Alignment 2nd'
-    Align2nd(tools, FLAGS)
+        '2.3 Alignment 2nd'
+        Align2nd(tools, FLAGS)
 
-    Align2out = [item for item in os.listdir("./") if item.startswith(FLAGS.prefix)]
-    fldir = FLAGS.out + "/" + FLAGS.prefix
-    for item in Align2out:
-        cmd = "mv %s %s" % (item, fldir)
-        os.system(cmd)
+        Align2out = [item for item in os.listdir("./") if item.startswith(FLAGS.prefix)]
+        fldir = FLAGS.out + "/" + FLAGS.prefix
+        for item in Align2out:
+            cmd = "mv %s %s" % (item, fldir)
+            os.system(cmd)
 
-    '5.Tidy'
-    fldir = FLAGS.out + "/" + FLAGS.prefix
-    fls = os.listdir(fldir)
-    fls.remove(FLAGS.prefix + "Aligned.sortedByCoord.out.bam")
+        '2.4 Tidy'
+        fldir = FLAGS.out + "/" + FLAGS.prefix
+        fls = os.listdir(fldir)
+        fls.remove(FLAGS.prefix + "Aligned.sortedByCoord.out.bam")
 
-    for item in fls:
-        fl = fldir + "/" + item
-        cmd = "rm -rf %s" % (fl)
-        os.system(cmd)
+        for item in fls:
+            fl = fldir + "/" + item
+            cmd = "rm -rf %s" % (fl)
+            os.system(cmd)
 
-    '6.Sort bam files'
+    else:
+        fldir = FLAGS.out + "/" + FLAGS.prefix
+        if not os.path.exists(fldir):
+            os.mkdir(fldir)
+
+        AlignBasic(tools, FLAGS)
+        Alignout = [item for item in os.listdir("./") if item.startswith(FLAGS.prefix)]
+
+        for item in Alignout:
+            cmd = "mv %s %s" % (item, fldir)
+            os.system(cmd)
+
+    '3.Sort bam files'
     fldir = FLAGS.out + "/" + FLAGS.prefix
     bamfls = fldir + "/" + FLAGS.prefix + "Aligned.sortedByCoord.out.bam"
     sortfls = fldir + "/" + FLAGS.prefix + "sort.bam"
     cmd = '%s sort -l 7 -m 1M -t NOTAG -O BAM -@ 1 -o %s %s' % (tools.samtools, sortfls, bamfls)
     os.system(cmd)
 
-    '7.Splicing calculate'
+    '4.Splicing calculate'
     # read gtf files
     print('loading gtf files...')
     gtf_file = FLAGS.gtf
